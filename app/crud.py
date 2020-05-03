@@ -7,19 +7,27 @@ table_name = 'estudiante'
 # CRUD OPERATIONS
 
 def create_student(student):
-    execute_query(query='INSERT INTO estudiante VALUES (?,?,?,?)', parameters=student)
+    execute_query(query='INSERT INTO {} VALUES (?,?,?,?)'.format(table_name), parameters=student)
 
 
 def get_students():
     return execute_query(query='SELECT * FROM estudiante')
 
 
-def update_student():
-    pass
+def update_student(student):
+    execute_query(query='''
+                UPDATE {}
+                SET doc=?, nombre=?, fecha=?, genero=?
+                WHERE doc=?
+            '''.format(table_name), parameters=student + (student[0],))
 
 
-def delete_student():
-    pass
+def delete_student(document_number):
+    execute_query(query='DELETE FROM {} WHERE doc=?'.format(table_name), parameters=(document_number,))
+
+
+def get_student(document_number):
+    return execute_query(query='SELECT * FROM {} WHERE doc=?'.format(table_name), parameters=(document_number,))
 
 
 def create_table():
