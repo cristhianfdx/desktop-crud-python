@@ -1,4 +1,6 @@
 from enum import Enum, unique
+from re import match
+from datetime import datetime
 from tkinter import *
 from tkinter import ttk, messagebox
 
@@ -34,7 +36,7 @@ class CrudGui:
 
         # Date Input
         Label(frame, text='Fecha: ', pady=15).grid(row=3, column=0, sticky=W)
-        self.date = DateEntry(frame, width=30)
+        self.date = DateEntry(frame, width=30, date_pattern='yyyy-mm-dd')
         self.date.grid(row=3, column=1, ipady=3)
 
         # Gender
@@ -74,19 +76,31 @@ class CrudGui:
         self.get_data()
 
     def validation_fields_rules(self):
-        return len(self.document_number.get()) != 0 and len(self.name.get()) != 0 and len(
-            self.date.get()) != 0 and self.gender.get() != 'Seleccione género'
+        return len(self.document_number.get().strip()) != 0 and len(self.name.get().strip()) != 0 and len(
+            self.date.get().strip()) != 0 and self.gender.get() != 'Seleccione género'
 
     def save(self):
         if self.validation_fields_rules():
             student = (
-                self.document_number.get(), self.name.get(), self.date.get(), GenderEnum[self.combo_value.get()].value
+                self.document_number.get(),
+                self.name.get(),
+                datetime.strptime(str(self.date.get_date()), '%Y-%m-%d').date(),
+                GenderEnum[self.combo_value.get()].value
             )
+
+            if not match(r'^\d{1,14}$', self.document_number.get()):
+                messagebox.showwarning('ERROR',
+                                       'El campo "Número de documento" debe estar compuesto solo por números con un máximo de 14 dígitos')
+                return
+
             if self.is_editable:
                 update_student(student)
                 messagebox.showinfo('OK', 'El estudiante ha sido actualizado :)')
                 self.clear_fields()
             else:
+                if get_student(self.document_number.get()).fetchone():
+                    messagebox.showwarning('¡ALERTA!', 'Ya existe un estudiante registrado con ese número de documento')
+                    return
                 create_student(student)
                 messagebox.showinfo('OK', 'El estudiante ha sido creado :)')
                 self.clear_fields()
@@ -140,10 +154,8 @@ class CrudGui:
             'gender': values[2]
         }
 
-    def validate_document_number_input(self):
-        print(get_student(self.document_number.get()))
-
     def clear_fields(self):
+        self.document_number.focus()
         self.button_text.set('Crear estudiante')
         self.document_number.delete(0, END)
         self.name.delete(0, END)
@@ -159,7 +171,7 @@ class GenderEnum(Enum):
 
 
 def run():
+    run_crud()
     window = Tk()
     CrudGui(window)
     window.mainloop()
-    run_crud()

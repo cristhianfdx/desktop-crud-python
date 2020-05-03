@@ -11,7 +11,7 @@ def create_student(student):
 
 
 def get_students():
-    return execute_query(query='SELECT * FROM estudiante')
+    return execute_query(query='SELECT * FROM {}'.format(table_name))
 
 
 def update_student(student):
